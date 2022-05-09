@@ -212,8 +212,7 @@ class ToranoanaXlsxTool:
             self.session.cookies.set(cookie['name'], cookie['value'])
         self.session.headers.update({ 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36' })
         self.driver.get('https://ecs.toranoana.jp/ec/app/mypage/order_history/')
-        # ship_list = ['not_shipped', 'shipped']
-        ship_list = ['not_shipped']
+        ship_list = ['not_shipped', 'shipped']
         period_list = ['this_year', 'last_year', 'two_years_ago']
 
         for s in ship_list:
