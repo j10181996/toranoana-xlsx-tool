@@ -3,10 +3,12 @@
 import time
 import io
 import threading
+import random
 import tkinter as tk
 from tkinter import ttk, messagebox
 from os.path import exists
 import requests
+from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 from openpyxl import Workbook, load_workbook
 from openpyxl.drawing.image import Image
@@ -14,6 +16,8 @@ from openpyxl.styles import Alignment
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
+
+delay_choices = [8, 5, 10, 6, 20, 11]
 
 class App(tk.Tk):
     def __init__(self):
@@ -128,7 +132,7 @@ class ToranoanaXlsxTool:
     def login(self):
         url = 'https://ecs.toranoana.jp/ec/app/common/login/'
         self.driver.get(url)
-        time.sleep(5)
+        time.sleep(random.choice(delay_choices))
         email = self.driver.find_element(By.ID, 'email')
         email.send_keys(self.email)
         password = self.driver.find_element(By.ID, 'repass')
@@ -138,7 +142,8 @@ class ToranoanaXlsxTool:
 
     def download(self):
         url = 'https://ecs.toranoana.jp/ec/app/mypage/order_history/'
-        response = self.session.get(url)
+        user_agent = UserAgent()
+        response = self.session.get(url, headers={ 'User-Agent': user_agent.random })
         soup = BeautifulSoup(response.text, "html.parser")
         pager = soup.select_one("#pager")
         if not pager:
@@ -147,13 +152,13 @@ class ToranoanaXlsxTool:
 
         for page in range(1, max_page+1):
             url = 'https://ecs.toranoana.jp/ec/app/mypage/order_history/?&currentPage=' + str(page)
-            response = self.session.get(url)
+            response = self.session.get(url, headers={ 'User-Agent': user_agent.random })
             soup = BeautifulSoup(response.text, "html.parser")
             orders = soup.select(".hist-table4-information-title")
 
             for n in orders:
                 url = n.select_one("a").get("href")
-                res = requests.get(url)
+                res = requests.get(url, headers={ 'User-Agent': user_agent.random })
                 if res.status_code != 200:
                     continue
                 soup = BeautifulSoup(res.text, "html.parser")
@@ -197,7 +202,7 @@ class ToranoanaXlsxTool:
                             sheet.column_dimensions[cell.column_letter].width = max(sheet.column_dimensions[cell.column_letter].width, len(values[i])*2.5)
                         cell.alignment = Alignment(horizontal='center', vertical='center')
                 sheet.row_dimensions[r].height = image.height * 3 / 4
-                time.sleep(5)
+                time.sleep(random.choice(delay_choices))
         if "Sheet" in self.wb: del self.wb["Sheet"]
         self.wb.save(self.path)
 
@@ -205,12 +210,26 @@ class ToranoanaXlsxTool:
         self.driver = webdriver.Chrome()
         self.driver.minimize_window()
         self.login()
-        time.sleep(3)
+        time.sleep(random.choice(delay_choices))
         cookies = self.driver.get_cookies()
         self.session = requests.Session()
         for cookie in cookies:
             self.session.cookies.set(cookie['name'], cookie['value'])
-        self.session.headers.update({ 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36' })
+        self.session.headers.update({
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9", 
+            "Accept-Encoding": "gzip, deflate, br", 
+            "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5,ig;q=0.4,el;q=0.3", 
+            "Cache-Control": "max-age=0",  
+            "Sec-Ch-Ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"", 
+            "Sec-Ch-Ua-Mobile": "?0", 
+            "Sec-Ch-Ua-Platform": "\"Windows\"", 
+            "Sec-Fetch-Dest": "document", 
+            "Sec-Fetch-Mode": "navigate", 
+            "Sec-Fetch-Site": "cross-site", 
+            "Sec-Fetch-User": "?1", 
+            "Sec-Gpc": "1", 
+            "Upgrade-Insecure-Requests": "1", 
+        })
         self.driver.get('https://ecs.toranoana.jp/ec/app/mypage/order_history/')
         ship_list = ['not_shipped', 'shipped']
         period_list = ['this_year', 'last_year', 'two_years_ago']
@@ -223,7 +242,7 @@ class ToranoanaXlsxTool:
                 button = self.driver.find_element(By.ID, 'submit')
                 select.select_by_value(p)
                 button.click()
-                time.sleep(5)
+                time.sleep(random.choice(delay_choices))
                 self.download()
 
 app = App()
