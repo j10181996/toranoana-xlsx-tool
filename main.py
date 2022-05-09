@@ -49,7 +49,7 @@ class App(tk.Tk):
         email = self.email.get()
         password = self.password.get()
         path = self.path.get()
-        if path[-5:] != ".xlsx":
+        if path and path[-5:] != ".xlsx":
             path += '.xlsx'
         self.face_ipt.pack_forget()
         self.face_load.pack()
