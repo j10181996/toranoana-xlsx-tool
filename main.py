@@ -100,7 +100,7 @@ class ToranoanaXlsxTool:
     def __init__(self, email, password, path):
         self.path = path if path else 'toranoana.xlsx'
         self.wb = load_workbook(self.path) if exists(self.path) else Workbook()
-        self.timestamp = datetime.datetime(1, 1, 1, 0, 0)
+        self.timestamp = datetime(1, 1, 1, 0, 0)
         if exists('timestamp'):
             f = open('timestamp', 'r')
             self.timestamp = datetime.strptime(f.read(), '%Y-%m-%d')
@@ -161,8 +161,9 @@ class ToranoanaXlsxTool:
 
             if sheet.title == 'unknown':
                 for i, value in enumerate(values):
-                    self.resizeImage(value[0])
-                    sheet.row_dimensions[i+2].height = value[0].height * 3 / 4
+                    if value[0]:
+                        self.resizeImage(value[0])
+                        sheet.row_dimensions[i+2].height = value[0].height * 3 / 4
             else:
                 circles = defaultdict(list)
                 for arr in values:
@@ -173,7 +174,7 @@ class ToranoanaXlsxTool:
                     circles[key].sort(key=lambda x: x[7]
                                       if x[7] else datetime.now())
                 sort_arr = [(key, len(circles[key])) for key in circles]
-                sort_arr.sort(key=lambda x: (x[1], x[0]), reverse=True)
+                sort_arr.sort(key=lambda x: (x[1], x[0] if x[0] else ''), reverse=True)
                 row = 2
                 for circle, count in sort_arr:
                     for value in circles[circle]:
@@ -260,8 +261,8 @@ class ToranoanaXlsxTool:
                         '.hist-table4-information-thumbnail img').get('src')
                     title = n.select_one(
                         '.hist-table4-information-title a span').get_text()
-                    price = n.select('.hist-table4-information-data')[1].select('.hist-table4-information-data-pair')[
-                        2].select_one('.hist-table4-information-data-value').get_text()[1:-1].replace(",", "")
+                    price = int(n.select('.hist-table4-information-data')[1].select('.hist-table4-information-data-pair')[
+                        2].select_one('.hist-table4-information-data-value').get_text()[1:-1].replace(",", ""))
                 image_res = requests.get(image_url)
                 image_file = io.BytesIO(image_res.content)
                 image = Image(image_file)
